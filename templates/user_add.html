@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Add User - SSH Panel{% endblock %}
+{% block content %}
+  <h1>Add SSH User</h1>
+  <form method="post" action="{{ url_for('user_add') }}" class="form">
+    <label>Username <input type="text" name="username" required maxlength="32" pattern="[a-zA-Z0-9]+" placeholder="alphanumeric only"></label>
+    <label>Password <input type="password" name="password" required></label>
+    <label>Traffic limit (GB, min 1) <input type="number" name="traffic_gb" required min="1" step="1" value="1" placeholder="e.g. 1"></label>
+    <div class="form-actions">
+      <button type="submit">Create User</button>
+      <a href="{{ url_for('index') }}" class="btn">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

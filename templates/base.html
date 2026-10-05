@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}SSH Panel{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    {% if session.get('admin_logged_in') %}
+    <nav>
+      <a href="{{ url_for('index') }}">Users</a>
+      <a href="{{ url_for('user_add') }}">Add User</a>
+      <a href="{{ url_for('settings') }}">Settings</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </nav>
+    {% endif %}
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div id="msg-dialog" class="dialog-overlay">
+    <div class="dialog-box">
+      <div class="dialog-body">
+        {% for cat, msg in messages %}
+        <p class="dialog-msg {{ cat }}">{{ msg }}</p>
+        {% endfor %}
+      </div>
+      <button type="button" class="dialog-ok" onclick="this.closest('.dialog-overlay').remove()">OK</button>
+    </div>
+  </div>
+  {% endif %}
+  {% endwith %}
+</body>
+</html>

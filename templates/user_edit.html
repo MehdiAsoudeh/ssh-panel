@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ user.username }} - SSH Panel{% endblock %}
+{% block content %}
+  <h1>Edit {{ user.username }}</h1>
+  <p>Home: <code>{{ user.home }}</code> · Traffic: {{ user.usage_gb }},{{ user.usage_mb }},{{ user.usage_kb }} KB{% if user.over_limit %} <span class="badge-over-limit">Over limit</span>{% endif %}{% if user.locked %} 🔒{% endif %}</p>
+  <form method="post" action="{{ url_for('user_edit', username=user.username) }}" class="form">
+    <label>New username (leave empty to keep) <input type="text" name="new_username" maxlength="32" pattern="[a-zA-Z0-9]*" value="" placeholder="{{ user.username }}"></label>
+    <label>New password (leave empty to keep) <input type="password" name="password"></label>
+    <label>Traffic limit (GB, min 1) <input type="number" name="traffic_gb" min="1" step="1" value="{{ user.limit_gb if user.limit_gb is not none else '1' }}" placeholder="1"></label>
+    <div class="form-actions">
+      <button type="submit">Update</button>
+      <form method="post" action="{{ url_for('user_reset_traffic', username=user.username) }}" class="inline">
+        <button type="submit" class="btn">Reset traffic</button>
+      </form>
+      <button type="submit" name="lock" value="1" class="btn btn-warn">Lock User</button>
+      <button type="submit" name="unlock" value="1" class="btn">Unlock User</button>
+      <a href="{{ url_for('index') }}" class="btn">Back</a>
+    </div>
+  </form>
+{% endblock %}

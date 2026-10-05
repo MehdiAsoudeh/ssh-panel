@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+user_limits.json
+panel_settings.json
+user_traffic.json
+ssh_sessions.json
+/index.html
+/login.html
+/base.html
+/user_info.html
+/templates_index
+/style.css

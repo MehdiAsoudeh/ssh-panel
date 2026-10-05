@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Login - SSH Panel{% endblock %}
+{% block content %}
+  <div class="login-box">
+    <h1>SSH Panel</h1>
+    <form method="post" action="{{ url_for('login') }}">
+      <label>Password <input type="password" name="password" required autofocus></label>
+      <button type="submit">Login</button>
+    </form>
+  </div>
+{% endblock %}

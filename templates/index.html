@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Users - SSH Panel{% endblock %}
+{% block content %}
+  <h1>SSH Users</h1>
+  <div class="table-wrap">
+  <table class="users-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>User</th>
+        <th>Traffic</th>
+        <th>Limit</th>
+        <th>Actions</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr data-username="{{ u.username }}"{% if u.over_limit %} class="over-limit"{% endif %}>
+        <td>{{ loop.index }}</td>
+        <td class="user-cell">{% if u.online %}<span class="online-dot" title="Online">●</span> {% endif %}{{ u.username }}{% if u.over_limit %} <span class="badge-over-limit">Over limit</span>{% endif %}</td>
+        <td class="traffic-cell">{{ u.usage_gb }},{{ u.usage_mb }},{{ u.usage_kb }} KB</td>
+        <td>{% if u.limit_gb is not none and u.limit_gb > 0 %}{{ u.limit_gb }} GB{% else %}—{% endif %}</td>
+        <td class="actions-cell">
+          <a href="{{ url_for('user_edit', username=u.username) }}" class="btn-icon btn-icon-edit" title="Edit">✏</a>
+          <form method="post" action="{{ url_for('user_reset_traffic', username=u.username) }}" class="inline reset-form" data-username="{{ u.username }}">
+            <button type="button" class="btn-icon" title="Reset traffic" onclick="showResetConfirm('{{ u.username }}', this.closest('form'))">↻</button>
+          </form>
+          <form method="post" action="{{ url_for('user_delete', username=u.username) }}" class="inline delete-form" data-username="{{ u.username }}">
+            <button type="button" class="btn-icon btn-icon-delete" title="Delete" onclick="showDeleteConfirm('{{ u.username }}', this.closest('form'))">✕</button>
+          </form>
+        </td>
+        <td class="lock-cell">{% if u.locked %}<span class="lock-icon" title="Locked">🔒</span>{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No SSH users found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div id="delete-dialog" class="dialog-overlay" style="display:none;">
+    <div class="dialog-box">
+      <div class="dialog-body">
+        <p id="delete-dialog-text" class="dialog-msg"></p>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn" onclick="hideDeleteConfirm()">Cancel</button>
+        <button type="button" class="btn btn-danger" id="delete-confirm-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+  <div id="reset-dialog" class="dialog-overlay" style="display:none;">
+    <div class="dialog-box">
+      <div class="dialog-body">
+        <p id="reset-dialog-text" class="dialog-msg"></p>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn" onclick="hideResetConfirm()">Cancel</button>
+        <button type="button" class="btn" id="reset-confirm-btn">Reset traffic</button>
+      </div>
+    </div>
+  </div>
+  <script>
+  var deleteFormToSubmit = null;
+  function showDeleteConfirm(username, form) {
+    document.getElementById('delete-dialog-text').textContent = 'Delete user "' + username + '"?';
+    deleteFormToSubmit = form;
+    document.getElementById('delete-dialog').style.display = 'flex';
+  }
+  function hideDeleteConfirm() {
+    document.getElementById('delete-dialog').style.display = 'none';
+    deleteFormToSubmit = null;
+  }
+  document.getElementById('delete-confirm-btn').onclick = function() {
+    if (deleteFormToSubmit) deleteFormToSubmit.submit();
+    hideDeleteConfirm();
+  };
+  var resetFormToSubmit = null;
+  function showResetConfirm(username, form) {
+    document.getElementById('reset-dialog-text').textContent = 'Reset traffic for "' + username + '"?';
+    resetFormToSubmit = form;
+    document.getElementById('reset-dialog').style.display = 'flex';
+  }
+  function hideResetConfirm() {
+    document.getElementById('reset-dialog').style.display = 'none';
+    resetFormToSubmit = null;
+  }
+  document.getElementById('reset-confirm-btn').onclick = function() {
+    if (resetFormToSubmit) resetFormToSubmit.submit();
+    hideResetConfirm();
+  };
+  function fmtTraffic(g, m, k) {
+    return g + ',' + m + ',' + k + ' KB';
+  }
+  function updateTraffic() {
+    fetch('/api/traffic').then(function(r) { return r.json(); }).then(function(data) {
+      var users = data.users || [];
+      users.forEach(function(u) {
+        var row = document.querySelector('tr[data-username="' + u.username + '"]');
+        if (!row) return;
+        var trafficTd = row.querySelector('.traffic-cell');
+        if (trafficTd) trafficTd.textContent = fmtTraffic(u.usage_gb, u.usage_mb, u.usage_kb);
+        row.classList.toggle('over-limit', u.over_limit);
+        var userTd = row.querySelector('.user-cell');
+        if (userTd) {
+          var badge = userTd.querySelector('.badge-over-limit');
+          if (u.over_limit && !badge) {
+            userTd.appendChild(document.createTextNode(' '));
+            var s = document.createElement('span');
+            s.className = 'badge-over-limit';
+            s.textContent = 'Over limit';
+            userTd.appendChild(s);
+          } else if (!u.over_limit && badge) {
+            if (badge.previousSibling && badge.previousSibling.nodeType === 3 && badge.previousSibling.textContent === ' ')
+              badge.previousSibling.remove();
+            badge.remove();
+          }
+        }
+      });
+    }).catch(function() {});
+  }
+  setInterval(updateTraffic, 5000);
+  setTimeout(updateTraffic, 500);
+  </script>
+{% endblock %}
